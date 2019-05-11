@@ -15,9 +15,14 @@ blue = (0, 0, 200)
 bright_red = (255, 0, 0)
 bright_green = (0, 255, 0)
 bright_blue = (0 , 0, 255)
+
+pause=False
+
 # Tamaño de ventana
 display_width=800
 display_height=600 
+# Tamaño Carro
+car_width=56
 
 gamedisplays=pygame.display.set_mode((display_width,display_height))
 
@@ -31,7 +36,7 @@ yellow_strip=pygame.image.load("yellow-strip.jpg")
 strip = pygame.image.load("strip.jpg")
 intro_background = pygame.image.load("background.jpg")
 instruction_background = pygame.image.load("background2.jpg")
-car_width=56
+
 
 
 def intro_loop():
@@ -70,6 +75,10 @@ def button(msg, x, y, w, h, ic, ac, action=None):
 				introduction()
 			elif action == "menu":
 				intro_loop()
+			elif action == "pause":
+				paused()
+			elif action == "unpause":
+				unpaused()
 	else:
 		pygame.draw.rect(gamedisplays, ic, (x, y, w, h))
 	smalltext = pygame.font.Font("freesansbold.ttf", 20)
@@ -95,7 +104,7 @@ def introduction():
 		TextSurf, TextRect = text_objects("INSTRUCTION", largetext)
 		TextRect.center = ((400), (100))
 		gamedisplays.blit(TextSurf, TextRect)
-		gamedisplays.blit(TextSurf, textRect)
+		gamedisplays.blit(textSurf, textRect)
 		stextSurf,stextRect = text_objects("ARROW LEFT : LEFT TURN", smalltext)
 		stextRect.center = ((150), (400))
 		hTextSurf,hTextRect = text_objects("ARROW RIGTH : RIGTH TURN", smalltext)
@@ -114,6 +123,35 @@ def introduction():
 		gamedisplays.blit(atextSurf, atextRect)
 		gamedisplays.blit(rtextSurf, rtextRect)
 		gamedisplays.blit(ptextSurf, ptextRect)
+		button("BACK", 600, 450, 100, 50, blue, bright_blue, "menu")
+		pygame.display.update()
+		clock.tick(30)
+
+
+def paused():
+	global pause
+
+	while pause:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				quit()
+				sys.exit()
+		gamedisplays.blit(instruction_background, (0, 0))
+		largetext = pygame.font.Font('freesansbold.ttf', 115)
+		TextSurf, TextRect = text_objects("PAUSED", largetext)
+		TextRect.center=((display_width/2),(display_height/2))
+		gamedisplays.blit(TextSurf, TextRect)
+		button("CONTINUE", 150, 450, 150, 50, green, bright_green, "unpause")
+		button("RESTART", 350, 450, 150, 50, blue, bright_blue, "play")
+		button("MAIN MENU", 550, 450, 200, 50, red, bright_red, "menu")
+		pygame.display.update()
+		clock.tick(30)
+
+
+def unpaused():
+	global pause
+	pause=False
 
 
 def obstacle(obs_startx, obs_starty, obs):
@@ -187,6 +225,9 @@ def car(x,y):
 
 
 def game_loop():
+	
+	global pause
+	
 	x = (display_width*0.45)
 	y = (display_height*0.8)
 	x_change = 0
@@ -209,21 +250,22 @@ def game_loop():
 				pygame.quit()
 				quit()
 		
-		if event.type == pygame.KEYDOWN:
-			if event.key == pygame.K_LEFT:
-				x_change = -5
-			if event.key == pygame.K_RIGHT:
-				x_change = 5
-			if event.key == pygame.K_a:
-				obstacle_speed += 2
-			if event.key == pygame.K_b:
-				obstacle_speed -=2
-		if event.type == pygame.KEYUP:
-			if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
-				x_change = 0
+			if event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_LEFT:
+					x_change = -5
+				if event.key == pygame.K_RIGHT:
+					x_change = 5
+				if event.key == pygame.K_a:
+					obstacle_speed += 2
+				if event.key == pygame.K_b:
+					obstacle_speed -=2
+			if event.type == pygame.KEYUP:
+				if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+					x_change = 0
 
 
 		x += x_change
+		pause = True
 		gamedisplays.fill(gray)
 		background()
 		obs_starty -= ( obstacle_speed/4 )
@@ -256,9 +298,10 @@ def game_loop():
 		if y < obs_starty + obs_height:
 			if x > obs_startx and x < obs_startx + obs_width or x + car_width > obs_startx and x + car_width < obs_startx + obs_width:
 				crash()
-			
+		button("PAUSE", 650, 0, 150, 50, blue, bright_blue, "pause")	
 		pygame.display.update()
 		clock.tick(60)
+
 
 intro_loop()
 game_loop()
